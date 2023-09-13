@@ -16,6 +16,9 @@ def read_contour_points(file_path):
                 coords = line.split('=')[1].split(';')
                 latitude = float(coords[1])
                 longitude = float(coords[0])
+                # Translate points with longitude < 0 to the corresponding points on the opposite side
+                if longitude < 0:
+                    longitude += 360
                 contour_points.append([longitude, latitude])
                 if gain is not None:
                     gain_values.append(gain)
@@ -39,14 +42,17 @@ interp = NearestNDInterpolator(triangulation, gain_values)
 # Evaluate the interpolator on the grid
 gain_grid = interp(x_grid, y_grid)
 
+# Define the number of color levels (discrete colors) in the color map
+num_levels = 20
+
 # Create a scatter plot of the original contour points with color based on gain
-plt.scatter(contour_points[:, 0], contour_points[:, 1], c=gain_values, cmap='viridis', s=10, label='Contour Points', zorder=2)
+plt.scatter(contour_points[:, 0], contour_points[:, 1], c=gain_values, cmap='coolwarm', s=10, label='Contour Points', zorder=2)
 
-# Create a contour plot of the interpolated gain values
-contour = plt.contourf(x_grid, y_grid, gain_grid, cmap='viridis', zorder=1)
+# Create a contour plot of the interpolated gain values with specified color levels
+contour = plt.contourf(x_grid, y_grid, gain_grid, cmap='coolwarm', zorder=1, levels=num_levels)
 
-# Add color bar
-plt.colorbar(contour, label='Gain Values (dB)')
+# Add color bar with specified number of ticks
+cbar = plt.colorbar(contour, label='Gain Values (dB)', ticks=np.linspace(gain_values.min(), gain_values.max(), num_levels))
 
 # Customize the plot
 plt.xlabel('Longitude')
